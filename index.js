@@ -109,30 +109,18 @@ function _endsWith(str, a) {
  * @return {String}
  * @api private
  */
-function _findPath () {
+function _findPath() {
 	// Remove the startup filename 
-	var dirpath = path.join( module.parent.filename, '..'),
+	var dirpath = path.join(module.parent.filename, '..'),
 		dirname = path.basename(dirpath),
 		fpath;
 
-	if (fs.existsSync(path.join(dirpath, 'test'))) {
-		dirpath = path.join(dirpath, 'test');
-		dirname = 'test';
-	} else {
-		// TODO exit strategy can be improved.
-		while( dirname !== 'test' && dirname !=='' ) {
-			dirpath = path.join( dirpath, '..');
-			dirname = path.basename(dirpath);
-		}
-	}
 
-	if ( dirname === 'test' ) {
-		fpath = path.join( dirpath, 'fixtures');
-		if ( fs.existsSync( fpath ) ) {
-			return fpath;
-		}
+	fpath = path.join(dirpath, 'fixtures');
+	if (fs.existsSync(fpath)) {
+		return fpath;
 	}
-};
+}
 
 module.exports = new Fixtures();
 
