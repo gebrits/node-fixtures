@@ -1,3 +1,12 @@
+/*
+	NOTE: Geert
+	Adopted this from https://github.com/dearwish/node-fixtures
+	It's pretty horrible but it does the job. 
+
+	Added directory recursion
+ */
+
+
 /**
  * Module dependencies.
  */
@@ -10,38 +19,54 @@ var _fixtures = {};
 /**
  * Fixtures constructor.
  */
-function Fixtures () {
+function Fixtures() {
 
 	var fixtures = {},
 		fpath = _findPath();
-	
-	if ( !fpath ) throw new Error('fixtures path not found');
 
-	var files = fs.readdirSync(fpath);
+	if (!fpath) throw new Error('fixtures path not found');
 
-	files.forEach( function (file) {
-		var isJSON = _endsWith(file, '.json'),
-			isJS = _endsWith(file, '.js')
-			fname = (isJSON) ? _trunc(file, 5) :
+	function recurseFN(recPath, fixtureMap) {
+
+		var files = fs.readdirSync(recPath);
+
+		files.forEach(function(file) {
+			var filepath = path.join(recPath, file);
+
+			if (fs.lstatSync(filepath).isDirectory()) {
+				var map = fixtures[file] = {};
+
+				recurseFN(filepath, map);
+			} else {
+
+				var isJSON = _endsWith(file, '.json'),
+					isJS = _endsWith(file, '.js');
+
+				fname = (isJSON) ? _trunc(file, 5) :
 					(isJS) ? _trunc(file, 3) : null;
-		if (fname) {
-			fixtures[fname] = JSON.parse( fs.readFileSync( path.join(fpath, file), 'utf8') ); 
-		}
-	});
+
+				if (fname) {
+					fixtureMap[fname] = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+				}
+			}
+		});
+	}
+
+	recurseFN(fpath, fixtures);
 
 	_fixtures = fixtures;
 	this.reset();
-};
+}
 
 /**
  * Reset all the fixtures from the source.
  * It is commonly used on setup when the fixtures has been modified.
  */
-Fixtures.prototype.reset = function () {
+Fixtures.prototype.reset = function() {
 	var fixtures = _clone(_fixtures);
-	for ( var i in fixtures ) {
-		if ( fixtures.hasOwnProperty(i) ) {
-			this[i]= fixtures[i];
+	for (var i in fixtures) {
+		if (fixtures.hasOwnProperty(i)) {
+			this[i] = fixtures[i];
 		}
 	};
 };
@@ -53,7 +78,7 @@ Fixtures.prototype.reset = function () {
  * @return {Object}
  * @api private
  */
-function _clone (param) {
+function _clone(param) {
 
 	var result;
 
@@ -123,4 +148,3 @@ function _findPath() {
 }
 
 module.exports = new Fixtures();
-
